@@ -1,20 +1,36 @@
-teToggleObservable = initialValue => {
-    return createToggle(new Rx.Subject(), initialValue);
+
+createToggleObservable = initialValue => {
+  return createToggle(new Rx.Subject(), initialValue, createFalseObservable());
 }
 
-function createIntervalObservable(){
-    return new Rx.Observable.interval(1000)
-}
 
-createToggle = (subject, initialValue) => {
-    return {
-          toggle: () => subject.next(!initialValue),
-              subscribe: (callback) => subject.subscribe(callback)
-                }
+
+createToggle = (subject, initialValue, override) => {
+  return {
+    toggle: () => {
+      setTimeout(() => subject.next(!initialValue), 5000)
+    },
+    subscribe: (callback) => {
+      override.subscribe(x => console.log("waiting for..."))
+      subject
+        .withLatestFrom(override)
+        .map(([current, override]) => {
+        return !current && !override
+      })
+        .subscribe(callback)
+    }
+  }
 }
 
 // createIntervalObservable().subscribe(x => console.log(x))
-//
-// const toggle = createToggleObservable(true);
-// toggle.subscribe(x => console.log(x))
-// toggle.toggle()
+
+const toggle = createToggleObservable(true);
+toggle.subscribe(x => console.log(x))
+toggle.toggle()
+
+function createFalseObservable(){
+  return new Rx.Observable.interval(1000).map(x => false)
+}
+function createTrueObservable(){
+  return new Rx.Observable.interval(1000).map(x => true)
+}
