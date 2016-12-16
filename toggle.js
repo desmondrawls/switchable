@@ -22,12 +22,16 @@ const createToggle = (subject, initialValue, override, callback) => {
     subject.startWith("starting override...").subscribe(callback)
   }
   
+  const switchToggles = (newToggle) => {
+    newToggle.subscribe()
+    return newToggle;
+  }
+  
   return {
     subject: subject,
     toggle: () => {
       subject.next(!initialValue)
-      const newbie = new createToggle(subject, !initialValue, override)
-      newbie.subscribe()
+      switchToggles(new createToggle(subject, !initialValue, override))
       return newbie;
     },
     subscribe: () => {
