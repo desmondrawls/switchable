@@ -1,22 +1,26 @@
 
-createToggleObservable = (initialValue, override) => {
-  return createToggle(new Rx.Subject(), initialValue, override);
+const createToggleObservable = (initialValue, override) => {
+  const toggleSubject = new Rx.Subject()
+  return createToggle(toggleSubject, initialValue, override);
 }
-createOverrideObservable = initialValue => {
-  return createToggle(new Rx.Subject(), initialValue, null);
+const createOverrideObservable = initialValue => {
+  const overrideSubject = new Rx.Subject()
+  return createToggle(overrideSubject, initialValue, null);
 }
 
-createToggle = (subject, initialValue, override) => { 
-  overriddenSubscribe = callback => {
+const createToggle = (subject, initialValue, override) => { 
+  const overriddenSubscribe = callback => {
     subject
         .withLatestFrom(override.subject)
         .do(([current, override]) => console.log("overridden gets first: ", current, "and ", override))
         .map(([current, override]) => { return !current && !override })
-        .startWith("start overridden")
+        .startWith("starting basic...")
         .subscribe(callback)
   }
 
-  plainSubscribe = callback => subject.startWith(initialValue).subscribe(callback)
+  const plainSubscribe = callback => {
+    subject.startWith("starting override...").subscribe(callback)
+  }
   
   return {
     subject: subject,
@@ -27,9 +31,9 @@ createToggle = (subject, initialValue, override) => {
   }
 }
 
-const override = createOverrideObservable(false)
-const toggle = createToggleObservable(false, override);
+const override = createOverrideObservable(true)
 override.subscribe(x => console.log("OVERRIDE Junk: ", x))
+const toggle = createToggleObservable(true, override);
 toggle.subscribe(x => console.log("TOGGLE: ", x))
 override.toggle()
 toggle.toggle()
@@ -40,5 +44,4 @@ function createFalseObservable(){
 function createTrueObservable(){
   return new Rx.Observable.interval(1000).map(x => true).take(10)
 }
-
 
