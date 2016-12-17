@@ -1,10 +1,10 @@
 
-const createToggleObservable = (initialValue) => {
+const initiateToggle = (initialValue) => {
   return createToggle(new Rx.Subject(), initialValue, null);
 }
 
 const createToggle = (subject, initialValue, override) => { 
-  const isVisibleWithOverride = () => {
+  const isVisibleWhenParentNot = () => {
     return Rx.Observable.merge(childStream(), parentStream())
   }
   
@@ -30,14 +30,14 @@ const createToggle = (subject, initialValue, override) => {
       return new createToggle(subject, !initialValue, override);
     },
     isVisible: () => {
-      return override ? isVisibleWithOverride() : subject
+      return override ? isVisibleWhenParentNot() : subject
     }
   }
 }
 
-const grandparent = createToggleObservable(true)
-const parent = createToggleObservable(true).override(grandparent)
-const child = createToggleObservable(true).override(parent);
+const grandparent = initiateToggle(true)
+const parent = initiateToggle(true).override(grandparent)
+const child = initiateToggle(true).override(parent);
 grandparent.isVisible().subscribe(x => console.log("GRANDPARENT VISIBLE: ", x))
 parent.isVisible().subscribe(x => console.log("PARENT VISIBLE: ", x))
 child.isVisible().subscribe(x => console.log("CHILD VISIBLE: ", x))
