@@ -22,7 +22,7 @@ const createToggle = (subject, initialValue, parents) => {
   }
 
   return {
-    override: (parent) => {
+    respect: (parent) => {
       return new createToggle(subject, initialValue, parents.concat(parent));
     }, 
     subject: subject,
@@ -37,9 +37,9 @@ const createToggle = (subject, initialValue, parents) => {
 }
 
 const grandparent = initializeToggle(true)
-const parent = initializeToggle(true).override(grandparent)
+const parent = initializeToggle(true).respect(grandparent)
 const otherParent = initializeToggle(true)
-const child = initializeToggle(true).override(parent).override(otherParent);
+const child = initializeToggle(true).respect(parent).respect(otherParent);
 grandparent.isVisible().subscribe(x => console.log("GRANDPARENT VISIBLE: ", x))
 parent.isVisible().subscribe(x => console.log("PARENT VISIBLE: ", x))
 otherParent.isVisible().subscribe(x => console.log("OTHER PARENT VISIBLE: ", x))
@@ -85,33 +85,51 @@ it('double toggle', () => {
 it('parent toggle', () => {
   let childVisibility = false;
   const parent = initiateToggle(true)
-  const offParent = parent.toggle()
-  const child = initiateToggle(false).override(parent);
+  const parentOff = parent.toggle()
+  const child = initiateToggle(false).respect(parent);
   toggle.isVisible().subscribe((newVisibility) => childVisibility = newVisibility);
   
   toggle.toggle()
   expect(childVisibility).toBeTruthy();
   
-  offParent.toggle()
-  
+  parentOff.toggle()
   expect(childVisibility).toBeFalsy();
+})
+
+it('multiple parents', () => {
+  let childVisibility = false;
+  const parent = initiateToggle(false)
+  const parentOn = parent.toggle()
+  const otherParent = initiateToggle(false)
+  const otherParentOn = otherParent.toggle()
+  const child = initiateToggle(false).respect(parent).respect(otherParent);
+  child.isVisible().subscribe((newVisibility) => childVisibility = newVisibility);
+  
+  child.toggle()
+  expect(childVisibility).toBeFalsy();
+  
+  parentOn.toggle()
+  expect(childVisibility).toBeFalsy();
+  
+  otherParentOn.toggle()
+  expect(childVisibility).toBeTruthy()
 })
 
 it('grandparent toggle', () => {
   let childVisibility = false;
   const grandparent = initiateToggle(true)
-  const offGrandparent = grandparent.toggle()
-  const parent = initiateToggle(true).override(grandparent)
-  const offParent = parent.toggle()
-  const child = initiateToggle(false).override(parent);
+  const grandparentOff = grandparent.toggle()
+  const parent = initiateToggle(true).respect(grandparent)
+  const parentOff = parent.toggle()
+  const child = initiateToggle(false).respect(parent);
   toggle.isVisible().subscribe((newVisibility) => childVisibility = newVisibility);
   
   toggle.toggle()
   expect(childVisibility).toBeTruthy();
   
-  offParent.toggle()
+  parentOff.toggle()
   expect(childVisibility).toBeFalsy();
   
-  offGrandparent.toggle()
+  grandparentOff.toggle()
   expect(childVisibility).toBeTruthy();
 })
