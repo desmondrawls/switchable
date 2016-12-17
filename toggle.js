@@ -1,6 +1,6 @@
 
-const createToggleObservable = (initialValue, override) => {
-  return createToggle(new Rx.Subject(), initialValue, override);
+const createToggleObservable = (initialValue) => {
+  return createToggle(new Rx.Subject(), initialValue, null);
 }
 
 const createToggle = (subject, initialValue, override) => { 
@@ -21,6 +21,9 @@ const createToggle = (subject, initialValue, override) => {
   }
 
   return {
+    override: (parent) => {
+      return new createToggle(subject, initialValue, parent);
+    }, 
     subject: subject,
     toggle: () => {
       console.log("ABOUT TO TOGGLE FROM: ", initialValue, "TO: ", !initialValue)
@@ -33,9 +36,9 @@ const createToggle = (subject, initialValue, override) => {
   }
 }
 
-const override = createToggleObservable(true, null)
+const override = createToggleObservable(true)
 override.isVisible().subscribe(x => console.log("OVERRIDE: ", x))
-const toggle = createToggleObservable(true, override);
+const toggle = createToggleObservable(true).override(override);
 toggle.isVisible().subscribe(x => console.log("MAIN: ", x))
 override.toggle()
 console.log("toggle sequence")
@@ -44,11 +47,4 @@ console.log("override")
 override.toggle()
 console.log("final toggle")
 toggle.toggle()
-
-function createFalseObservable(){
-  return new Rx.Observable.interval(1000).map(x => false).take(10)
-}
-function createTrueObservable(){
-  return new Rx.Observable.interval(1000).map(x => true).take(10)
-}
 
