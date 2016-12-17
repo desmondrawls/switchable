@@ -11,7 +11,7 @@ const createToggle = (subject, initialValue, parents) => {
     return subject
         .withLatestFrom(...parents.map((parent) => parent.isVisible()))
         .map(([child, ...parentVisibilities]) => { 
-          return child && parentVisibilities.every((x) => x !== true);
+          return child && parentVisibilities.every(x => !x);
         })
   }
   
@@ -133,3 +133,4 @@ it('grandparent toggle', () => {
   grandparentOff.toggle()
   expect(childVisibility).toBeTruthy();
 })
+
