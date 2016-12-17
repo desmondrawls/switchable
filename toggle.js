@@ -5,19 +5,19 @@ const createToggleObservable = (initialValue) => {
 
 const createToggle = (subject, initialValue, override) => { 
   const isVisibleWithOverride = () => {
-    return Rx.Observable.merge(mainStream(), overrideStream())
+    return Rx.Observable.merge(childStream(), parentStream())
   }
   
-  const mainStream = () => {
+  const childStream = () => {
     return subject
         .withLatestFrom(override.isVisible())
-        .map(([current, other]) => { return current && !other })
+        .map(([child, parent]) => { return child && !parent })
   }
   
-  const overrideStream = () => {
+  const parentStream = () => {
     return override.subject
             .withLatestFrom(subject)
-            .map(([current, other]) => { return !current && other })
+            .map(([parent, child]) => { return child && !parent })
   }
 
   return {
@@ -45,9 +45,9 @@ const grandparentOff = grandparent.toggle()
 const parentOff = parent.toggle()
 console.log("child sequence")
 const childOff = child.toggle().toggle().toggle()
-console.log("parent sequence")
+console.log("parent once")
 parentOff.toggle()
-console.log("grandparent sequence")
+console.log("grandparent once")
 grandparentOff.toggle()
 console.log("final toggle")
 childOff.toggle() //visible because parent hidden but should be hidden too because grandparent is visible
