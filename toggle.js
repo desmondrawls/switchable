@@ -1,11 +1,6 @@
 
 const createToggleObservable = (initialValue, override) => {
-  const toggleSubject = new Rx.Subject()
-  return createToggle(toggleSubject, initialValue, override);
-}
-const createOverrideObservable = (initialValue, callback) => {
-  const overrideSubject = new Rx.Subject()
-  return createToggle(overrideSubject, initialValue, null);
+  return createToggle(new Rx.Subject(), initialValue, override);
 }
 
 const createToggle = (subject, initialValue, override) => { 
@@ -16,42 +11,38 @@ const createToggle = (subject, initialValue, override) => {
   const mainStream = () => {
     return subject
         .withLatestFrom(override.subject)
-        .do(([current, other]) => console.log("overridden gets current: ", current, "and ", other))
-        .map(([current, other]) => { return !current && !other })
-        .startWith("starting basic main stream...")
+        .map(([current, other]) => { return current && !other })
   }
   
   const overrideStream = () => {
     return override.subject
             .withLatestFrom(subject)
-            .do(([current, other]) => console.log("overridde gets override: ", current, "and ", other))
             .map(([current, other]) => { return current && other })
-            .startWith("starting basic override stream...")
-  }
-
-  const isVisible = () => {
-    return subject.startWith("starting override...")
   }
 
   return {
     subject: subject,
     toggle: () => {
+      console.log("ABOUT TO TOGGLE FROM: ", initialValue, "TO: ", !initialValue)
       subject.next(!initialValue)
       return new createToggle(subject, !initialValue, override);
     },
     isVisible: () => {
-      return override ? isVisibleWithOverride() : isVisible()
+      return override ? isVisibleWithOverride() : subject
     }
   }
 }
 
-const override = createOverrideObservable(true)
-override.isVisible().subscribe(x => console.log("OVERRIDE Junk: ", x))
+const override = createToggleObservable(true, null)
+override.isVisible().subscribe(x => console.log("OVERRIDE: ", x))
 const toggle = createToggleObservable(true, override);
-toggle.isVisible().subscribe(x => console.log("TOGGLE: ", x))
+toggle.isVisible().subscribe(x => console.log("MAIN: ", x))
 override.toggle()
+console.log("toggle sequence")
 toggle.toggle().toggle().toggle()
+console.log("override")
 override.toggle()
+console.log("final toggle")
 toggle.toggle()
 
 function createFalseObservable(){
