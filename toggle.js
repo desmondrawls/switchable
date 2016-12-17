@@ -51,3 +51,61 @@ console.log("grandparent once")
 grandparentOff.toggle()
 console.log("final toggle")
 childOff.toggle()
+
+class childToggleSpy {
+  visibility: boolean;
+}
+
+it('basic toggle', () => {
+  let visibility = false;
+  const toggle = initiateToggle(visibility);
+  toggle.isVisible().subscribe((newVisibility) => visibility = newVisibility);
+  
+  toggle.toggle();
+  
+  expect(visibility).toBeTruthy();
+})
+
+it('double toggle', () => {
+  let visibility = false;
+  const toggle = initiateToggle(visibility);
+  toggle.isVisible().subscribe((newVisibility) => visibility = newVisibility);
+  
+  toggle.toggle().toggle();
+  
+  expect(visibility).toBeFalsy();
+})
+
+it('parent toggle', () => {
+  let childVisibility = false;
+  const parent = initiateToggle(true)
+  const offParent = parent.toggle()
+  const child = initiateToggle(false).override(parent);
+  toggle.isVisible().subscribe((newVisibility) => childVisibility = newVisibility);
+  
+  toggle.toggle()
+  expect(childVisibility).toBeTruthy();
+  
+  offParent.toggle()
+  
+  expect(childVisibility).toBeFalsy();
+})
+
+it('grandparent toggle', () => {
+  let childVisibility = false;
+  const grandparent = initiateToggle(true)
+  const offGrandparent = grandparent.toggle()
+  const parent = initiateToggle(true).override(grandparent)
+  const offParent = parent.toggle()
+  const child = initiateToggle(false).override(parent);
+  toggle.isVisible().subscribe((newVisibility) => childVisibility = newVisibility);
+  
+  toggle.toggle()
+  expect(childVisibility).toBeTruthy();
+  
+  offParent.toggle()
+  expect(childVisibility).toBeFalsy();
+  
+  offGrandparent.toggle()
+  expect(childVisibility).toBeTruthy();
+})
