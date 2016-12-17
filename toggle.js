@@ -9,15 +9,27 @@ const createOverrideObservable = (initialValue, callback) => {
 }
 
 const createToggle = (subject, initialValue, override) => { 
-  const overriddenSubscribe = () => {
+  const isVisibleWithOverride = () => {
+    return Rx.Observable.merge(mainStream(), overrideStream())
+  }
+  
+  const mainStream = () => {
     return subject
         .withLatestFrom(override.subject)
-        .do(([current, override]) => console.log("overridden gets current: ", current, "and ", override))
-        .map(([current, override]) => { return !current && !override })
+        .do(([current, other]) => console.log("overridden gets current: ", current, "and ", other))
+        .map(([current, other]) => { return !current && !other })
         .startWith("starting basic...")
   }
+  
+  const overrideStream = () => {
+    return override.subject
+            .withLatestFrom(subject)
+            .do(([current, other]) => console.log("overridde gets override: ", current, "and ", other))
+            .map(([current, other]) => { return current && other })
+            .startWith("starting basic...")
+  }
 
-  const plainSubscribe = () => {
+  const isVisible = () => {
     return subject.startWith("starting override...")
   }
 
@@ -28,7 +40,7 @@ const createToggle = (subject, initialValue, override) => {
       return new createToggle(subject, !initialValue, override);
     },
     isVisible: () => {
-      return override ? overriddenSubscribe() : plainSubscribe()
+      return override ? isVisibleWithOverride() : isVisible()
     }
   }
 }
@@ -38,7 +50,8 @@ override.isVisible().subscribe(x => console.log("OVERRIDE Junk: ", x))
 const toggle = createToggleObservable(true, override);
 toggle.isVisible().subscribe(x => console.log("TOGGLE: ", x))
 override.toggle()
-toggle.toggle().toggle().toggle()
+toggle.toggle().toggle()
+override.toggle()
 
 function createFalseObservable(){
   return new Rx.Observable.interval(1000).map(x => false).take(10)
@@ -46,4 +59,5 @@ function createFalseObservable(){
 function createTrueObservable(){
   return new Rx.Observable.interval(1000).map(x => true).take(10)
 }
+
 
