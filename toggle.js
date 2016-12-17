@@ -15,7 +15,7 @@ const createToggle = (subject, initialValue, override) => {
   }
   
   const parentStream = () => {
-    return override.subject
+    return override.isVisible()
             .withLatestFrom(subject)
             .map(([parent, child]) => { return child && !parent })
   }
@@ -50,5 +50,4 @@ parentOff.toggle()
 console.log("grandparent once")
 grandparentOff.toggle()
 console.log("final toggle")
-childOff.toggle() //visible because parent hidden but should be hidden too because grandparent is visible
-
+childOff.toggle()
